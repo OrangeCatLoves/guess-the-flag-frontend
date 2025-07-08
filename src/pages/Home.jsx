@@ -4,9 +4,13 @@ import '../index.css'   // ensure you import your global CSS
 
 export default function Home() {
   const navigate = useNavigate()
+  const displayName = localStorage.getItem('displayName') || 'Player'
 
   return (
     <div className="app-container">
+      <h2 style={{ color:'#fff', marginBottom:'1rem' }}>
+        Welcome, {displayName}!
+      </h2>
       {/* Title + placeholder icon */}
       <h1 style={{ fontSize: '3rem', color: '#fff', marginBottom: '2rem' }}>
         <span role="img" aria-label="flag">🚩</span>{' '}
