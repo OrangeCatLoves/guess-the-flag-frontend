@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import { useUser } from '../contexts/UserContext'
 
 export default function LoginPage() {
+  const { login } = useUser() // get login function from context
   const [mode, setMode] = useState('login')           // 'login' | 'register' | 'change'
   const [identifier, setIdentifier] = useState('')    // username/email for login
   const [username, setUsername] = useState('')        // for registration
@@ -20,9 +22,13 @@ export default function LoginPage() {
         identifier,
         password
       })
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('displayName', data.displayName)
       axios.defaults.headers.common['Authorization'] = 'Bearer ' + data.token
+      login({
+        userId: data.userId,
+        username: data.displayName,
+        token: data.token,
+        guest: false
+      })
       alert('Logged in!')
       nav('/home')
     } catch (e) {
@@ -68,9 +74,13 @@ export default function LoginPage() {
   const handleGuest = async () => {
     try {
         const { data } = await axios.post(`${API}/auth/guest`)
-        localStorage.setItem('token', data.token)
-        localStorage.setItem('displayName', data.displayName)
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + data.token
+        login({
+          userId: null,
+          username: data.displayName,
+          token: data.token,
+          guest: true
+        })
         alert(`Playing as ${data.displayName}`)
         nav('/home')
     } catch {

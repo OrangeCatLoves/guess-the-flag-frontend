@@ -1,11 +1,35 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../index.css'   // ensure you import your global CSS
+import { useUser } from '../contexts/UserContext'
+import { useSocket } from '../contexts/SocketContext'
 
 export default function Home() {
+  const { user } = useUser() // get user info from context
   const navigate = useNavigate()
-  const displayName = localStorage.getItem('displayName') || 'Player'
+  const { socket } = useSocket() // get socket from context
+  const displayName = user.username || 'Player'
+  const [onlineCount, setOnlineCount] = React.useState(0)
 
+  // 🔺 NEW: register with the socket server as soon as we have both socket & user
+  useEffect(() => {
+    if (!socket || !user.username) return
+    socket.emit('register', {
+      userId:   user.userId,
+      username: user.username
+    })
+  }, [socket, user.userId, user.username])
+
+  // ← your existing listener for live updates
+  useEffect(() => {
+    if (!socket) return
+    const handler = (users) => setOnlineCount(users.length)
+    socket.on('online-users', handler)
+    return () => {
+      socket.off('online-users', handler)
+    }
+  }, [socket])
+  
   return (
     <div className="app-container">
       <h2 style={{ color:'#fff', marginBottom:'1rem' }}>
@@ -16,6 +40,11 @@ export default function Home() {
         <span role="img" aria-label="flag">🚩</span>{' '}
         GuessTheFlag
       </h1>
+
+      {/* Show live online count */}
+      <p style={{ color: '#fff', marginBottom: '2rem', fontSize: '1.25rem' }}>
+        Online Users: {onlineCount}
+      </p>
 
       {/* Buttons */}
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>

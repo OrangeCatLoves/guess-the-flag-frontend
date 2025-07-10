@@ -1,3 +1,12 @@
+/* remove default browser margins and ensure full viewport */
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* prevent scrollbars */
+  height: 100%;
+  width: 100%;
+}
+
 /* animated gradient background */
 @keyframes gradientBG {
   0%   { background-position: 0% 50%; }
@@ -12,9 +21,12 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+  width: 100vw;
+  box-sizing: border-box;
   padding: 1rem;
   background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
   background-size: 400% 400%;
   animation: gradientBG 15s ease infinite;
   text-align: center;
+  overflow: hidden;
 }
