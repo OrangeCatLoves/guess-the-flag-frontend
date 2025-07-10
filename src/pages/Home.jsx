@@ -80,7 +80,7 @@ export default function Home() {
           onSelect={setSelectedOpponent}
           onSend={() => {
             socket.emit('invite', {
-              toUserId: selectedOpponent,
+              toSocketId: selectedOpponent,
               from:     { userId: user.userId, username: user.username }
             })
             setShowModal(false)

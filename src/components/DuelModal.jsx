@@ -26,11 +26,11 @@ export default function DuelModal({
         <h3>Select your opponent</h3>
         <div style={{ margin: '1rem 0' }}>
           {users.map(u => {
-            const isSelected = u.userId === selectedId;
+            const isSelected = u.socketId === selectedId;
             return (
               <div
-                key={u.userId}
-                onClick={() => onSelect(u.userId)}
+                key={u.socketId}
+                onClick={() => onSelect(u.socketId)}
                 style={{
                   padding: '0.75rem',
                   margin: '0.5rem 0',
