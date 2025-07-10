@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../index.css'   // ensure you import your global CSS
 import { useUser } from '../contexts/UserContext'
 import { useSocket } from '../contexts/SocketContext'
+import DuelModal from '../components/DuelModal'
 
 export default function Home() {
   const { user } = useUser() // get user info from context
@@ -10,20 +11,27 @@ export default function Home() {
   const { socket } = useSocket() // get socket from context
   const displayName = user.username || 'Player'
   const [onlineCount, setOnlineCount] = React.useState(0)
+  const [onlineUsersList, setOnlineUsersList] = useState([])
+  const [showModal, setShowModal] = useState(false)
+  const [selectedOpponent, setSelectedOpponent] = useState(null)
 
   // 🔺 NEW: register with the socket server as soon as we have both socket & user
   useEffect(() => {
     if (!socket || !user.username) return
     socket.emit('register', {
       userId:   user.userId,
-      username: user.username
+      username: user.username,
+      guest: user.guest
     })
-  }, [socket, user.userId, user.username])
+  }, [socket, user.userId, user.username, user.guest])
 
   // ← your existing listener for live updates
   useEffect(() => {
     if (!socket) return
-    const handler = (users) => setOnlineCount(users.length)
+    const handler = (users) => {
+      setOnlineCount(users.length)
+      setOnlineUsersList(users)
+    }
     socket.on('online-users', handler)
     return () => {
       socket.off('online-users', handler)
@@ -55,12 +63,31 @@ export default function Home() {
           <span role="img" aria-label="solo">👤</span> Solo
         </button>
         <button
-          onClick={() => navigate('/play?mode=duel')}
+          onClick={() => {
+            setSelectedOpponent(null)
+            setShowModal(true)
+          }}
           style={buttonStyle}
         >
           <span role="img" aria-label="duel">👥</span> Duel
         </button>
       </div>
+
+      {showModal && (
+        <DuelModal
+          users={onlineUsersList.filter(u => u.socketId !== socket.id)}
+          selectedId={selectedOpponent}
+          onSelect={setSelectedOpponent}
+          onSend={() => {
+            socket.emit('invite', {
+              toUserId: selectedOpponent,
+              from:     { userId: user.userId, username: user.username }
+            })
+            setShowModal(false)
+          }}
+          onClose={() => setShowModal(false)}
+        />
+      )}
 
       {/* Description */}
       <div style={{ maxWidth: '600px', color: '#fff', lineHeight: 1.6 }}>
