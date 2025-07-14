@@ -4,6 +4,7 @@ import '../index.css'   // ensure you import your global CSS
 import { useUser } from '../contexts/UserContext'
 import { useSocket } from '../contexts/SocketContext'
 import DuelModal from '../components/DuelModal'
+import InviteModal from '../components/InviteModal'
 
 export default function Home() {
   const { user } = useUser() // get user info from context
@@ -14,8 +15,17 @@ export default function Home() {
   const [onlineUsersList, setOnlineUsersList] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [selectedOpponent, setSelectedOpponent] = useState(null)
+  const [invitation, setInvitation] = useState(null);
 
-  // 🔺 NEW: register with the socket server as soon as we have both socket & user
+  useEffect(() => {
+    if (!socket) return;
+    socket.on('invite-received', data => {
+      setInvitation(data);
+    });
+    return () => socket.off('invite-received');
+  }, [socket]);
+
+  // Register with the socket server as soon as we have both socket & user
   useEffect(() => {
     if (!socket || !user.username) return
     socket.emit('register', {
@@ -86,6 +96,16 @@ export default function Home() {
             setShowModal(false)
           }}
           onClose={() => setShowModal(false)}
+        />
+      )}
+      {invitation && (
+        <InviteModal
+          invitation={invitation}
+          onAccept={() => {
+            /* handle accept later */
+            setInvitation(null);
+          }}
+          onReject={() => setInvitation(null)}
         />
       )}
 
