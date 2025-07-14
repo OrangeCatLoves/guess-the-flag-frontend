@@ -19,8 +19,8 @@ export default function Home() {
 
   useEffect(() => {
     if (!socket) return
-    socket.on('start-duel', ({ roomId }) => {
-      navigate(`/play?mode=duel&session=${roomId}`)
+    socket.on('start-duel', ({ sessionId }) => {
+      navigate(`/play?mode=duel&session=${sessionId}`)
     })
     return () => { socket.off('start-duel') }
   }, [socket])
