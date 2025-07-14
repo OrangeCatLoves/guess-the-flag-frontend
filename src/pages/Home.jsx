@@ -18,6 +18,14 @@ export default function Home() {
   const [invitation, setInvitation] = useState(null);
 
   useEffect(() => {
+    if (!socket) return
+    socket.on('start-duel', ({ roomId }) => {
+      navigate(`/play?mode=duel&session=${roomId}`)
+    })
+    return () => { socket.off('start-duel') }
+  }, [socket])
+
+  useEffect(() => {
     if (!socket) return;
     socket.on('invite-received', data => {
       setInvitation(data);
@@ -102,7 +110,9 @@ export default function Home() {
         <InviteModal
           invitation={invitation}
           onAccept={() => {
-            /* handle accept later */
+            socket.emit('accept-invite', {
+              inviterSocketId: invitation.socketId
+            })
             setInvitation(null);
           }}
           onReject={() => setInvitation(null)}
