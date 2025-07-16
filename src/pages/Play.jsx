@@ -9,7 +9,7 @@ export default function Play() {
   const params = new URLSearchParams(search)
   const sessionId = params.get('session')
   const API = import.meta.env.VITE_API_URL
-  const ROUND_DURATION = 10
+  const ROUND_DURATION = 25
 
   // — component state
   const [session,   setSession]   = useState(null)
@@ -39,15 +39,15 @@ export default function Play() {
   }, [])
 
   // 3) compute elapsed, idx, round, timeLeft
-  //    (we do it unconditionally, guarding session with a default)
-  const startMs     = session ? new Date(session.startedAt).getTime() : now
-  const elapsed     = Math.floor((now - startMs) / 1000)
-  const clamped     = Math.max(0, Math.min(elapsed, ROUND_DURATION * 5)) // five 50s rounds
-  const idx         = Math.floor(clamped / ROUND_DURATION)               // 0–4
-  const round       = idx + 1                                // 1–5
-  const secInto     = clamped % ROUND_DURATION
-  const timeLeft    = ROUND_DURATION - secInto
-  const flag        = session ? session.flags[idx] : null
+  // (we do it unconditionally, guarding session with a default)
+  const startMs = session ? new Date(session.startedAt).getTime() : now
+  const elapsed = Math.floor((now - startMs) / 1000)
+  const clamped = Math.max(0, Math.min(elapsed, ROUND_DURATION * 5)) // five 50s rounds
+  const idx = Math.floor(clamped / ROUND_DURATION) // 0–4
+  const round = idx + 1  // 1–5
+  const secInto = clamped % ROUND_DURATION
+  const timeLeft = ROUND_DURATION - secInto
+  const flag = session ? session.flags[idx] : null
 
   // 4) reset hints & guess internally whenever we actually move to a new flag
   useEffect(() => {
@@ -57,7 +57,6 @@ export default function Play() {
   }, [session, idx])
 
   // — handlers
-
   const handleUseHint = () => {
     if (!flag) return
     if (usedHints.length >= 3) return
