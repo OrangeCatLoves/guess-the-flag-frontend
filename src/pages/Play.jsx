@@ -1,8 +1,7 @@
-// src/pages/Play.jsx
 import React, { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { useSocket } from '../contexts/SocketContext'
-import axios from 'axios'
+import { useNavigate, useLocation }   from 'react-router-dom'
+import axios                          from 'axios'
+import { useSocket }                  from '../contexts/SocketContext'
 
 export default function Play() {
   const navigate = useNavigate()
@@ -14,15 +13,15 @@ export default function Play() {
 
   const { socket } = useSocket()
 
-  // component state
+  // state
   const [session,   setSession]   = useState(null)
   const [now,       setNow]       = useState(Date.now())
   const [usedHints, setUsedHints] = useState([])
   const [guess,     setGuess]     = useState('')
-  const [totalScore, setTotalScore] = useState(0)
-  const [submitted,  setSubmitted]  = useState(false)
+  const [totalScore,setTotalScore]= useState(0)
+  const [submitted, setSubmitted] = useState(false)
 
-  // 1) fetch the session (flags + startedAt)
+  // 1) fetch session
   useEffect(() => {
     if (!sessionId) return navigate('/')
     axios.get(`${API}/api/session/${sessionId}`)
@@ -30,47 +29,43 @@ export default function Play() {
       .catch(() => { alert('Failed to load session'); navigate('/') })
   }, [sessionId])
 
-  // 2) advance clock
+  // 2) clock tick
   useEffect(() => {
     const iv = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(iv)
   }, [])
 
-  // 3) derive round + timeLeft
+  // 3) compute round + timeLeft
   const startMs = session ? new Date(session.startedAt).getTime() : now
   const elapsed = Math.floor((now - startMs)/1000)
   const idx     = Math.min(Math.floor(elapsed/ROUND_DURATION), 4)
   const round   = idx + 1
-  const timeLeft = elapsed >= ROUND_DURATION*5
+  const timeLeft= elapsed >= ROUND_DURATION*5
     ? 0
     : ROUND_DURATION - (elapsed % ROUND_DURATION)
-  const flag = session?.flags[idx]
+  const flag    = session?.flags[idx]
 
-  // 4) when the round index changes, clear in‐round state
+  // 4) clear per‐round state
   useEffect(() => {
     setUsedHints([])
     setGuess('')
     setSubmitted(false)
   }, [idx])
 
-  // 5) handle hint‐use
+  // 5) hint
   const handleUseHint = () => {
-    if (usedHints.length >= 3) return
+    if (!flag || usedHints.length >= 3) return
     const avail = flag.hints.filter(h => !usedHints.includes(h))
     if (!avail.length) return
-    setUsedHints(prev => [...prev, avail[Math.floor(Math.random()*avail.length)]])
+    setUsedHints(u => [...u, avail[Math.floor(Math.random()*avail.length)]])
   }
 
-  // 6) submit guess to server
+  // 6) submit
   const handleSubmit = () => {
     if (submitted) return
-    if (!guess.trim()) {
-      alert('Please enter a guess!')
-      return
-    }
+    if (!guess.trim()) { alert('Enter a guess!'); return }
     socket.emit('submit-guess', {
       sessionId,
-      round,
       guess,
       hintsUsed: usedHints.length,
       timeLeft
@@ -78,27 +73,23 @@ export default function Play() {
     setSubmitted(true)
   }
 
-  // 7) listen for score updates & game-over
+  // 7) listen for updates & game-over
   useEffect(() => {
     if (!socket) return
     const onScore = ({ socketId, totalScore }) => {
-      if (socketId === socket.id) {
-        setTotalScore(totalScore)
-      }
+      if (socketId === socket.id) setTotalScore(totalScore)
     }
-    const onOver = ({ you, opponent }) => {
-      navigate('/results', { state: { you, opponent } })
+    const onOver  = data => {
+      navigate('/results', { state: data })
     }
     socket.on('score-update', onScore)
-    socket.on('game-over',   onOver)
-
+    socket.on('game-over',    onOver)
     return () => {
       socket.off('score-update', onScore)
-      socket.off('game-over',   onOver)
+      socket.off('game-over',    onOver)
     }
   }, [socket])
 
-  // loading guard
   if (!session || !flag) {
     return <div style={{ textAlign:'center', color:'#fff' }}>Loading game…</div>
   }
@@ -115,39 +106,36 @@ export default function Play() {
             maxWidth:'80%',
             maxHeight:'50vh',
             border:'4px solid #fff',
-            borderRadius:'8px'
+            borderRadius:8
           }}
         />
       </div>
 
-      <div style={{ color:'#fff', fontSize:'1.5rem', marginBottom:'1rem' }}>
+      <div style={{ color:'#fff', fontSize:18, marginBottom:'1rem' }}>
         Time Remaining: {timeLeft}s
       </div>
 
-      <div style={{ marginBottom:'1rem' }}>
-        <button
-          onClick={handleUseHint}
-          disabled={usedHints.length>=3 || submitted}
-          style={{
-            padding:'0.5rem 1rem',
-            background: usedHints.length<3 ? '#007bff':'#555',
-            color:'#fff',
-            border:'none',
-            borderRadius:'0.25rem',
-            cursor: usedHints.length<3 ? 'pointer':'not-allowed'
-          }}
-        >
-          Use Hint ({usedHints.length}/3)
-        </button>
-      </div>
+      <button
+        onClick={handleUseHint}
+        disabled={usedHints.length>=3||submitted}
+        style={{
+          marginBottom:'1rem',
+          padding:'0.5rem 1rem',
+          background: usedHints.length<3?'#007bff':'#555',
+          color:'#fff', border:'none', borderRadius:4,
+          cursor: usedHints.length<3?'pointer':'not-allowed'
+        }}
+      >
+        Use Hint ({usedHints.length}/3)
+      </button>
 
       <div style={{ color:'#fff', marginBottom:'1.5rem' }}>
         {usedHints.map((h,i)=>(
-          <p key={i} style={{ margin:'0.25rem 0' }}>{h}</p>
+          <p key={i} style={{ margin:'4px 0' }}>{h}</p>
         ))}
       </div>
 
-      <div style={{ display:'flex', justifyContent:'center', gap:'0.5rem', marginBottom:'2rem' }}>
+      <div style={{ display:'flex', gap:8, marginBottom:'2rem', justifyContent:'center' }}>
         <input
           type="text"
           value={guess}
@@ -156,10 +144,8 @@ export default function Play() {
           placeholder="Enter your guess"
           maxLength={60}
           style={{
-            padding:'0.5rem',
-            fontSize:'16px',
-            width:'300px',
-            boxSizing:'border-box'
+            padding:8, fontSize:16,
+            width:300, boxSizing:'border-box'
           }}
         />
         <button
@@ -168,13 +154,11 @@ export default function Play() {
           style={{
             padding:'0.5rem 1rem',
             background: submitted?'#555':'#28a745',
-            color:'#fff',
-            border:'none',
-            borderRadius:'0.25rem',
+            color:'#fff', border:'none', borderRadius:4,
             cursor: submitted?'not-allowed':'pointer'
           }}
         >
-          {submitted ? 'Submitted' : 'Submit'}
+          {submitted?'Submitted':'Submit'}
         </button>
       </div>
 

@@ -1,48 +1,40 @@
-// src/pages/Results.jsx
 import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 export default function Results() {
   const { state } = useLocation()
-  const nav        = useNavigate()
+  const nav       = useNavigate()
 
-  // If we weren’t passed any state, bounce home
-  if (!state || !state.you || !state.opponent) {
-    nav('/home', { replace: true })
+  if (!state?.you || !state?.opponent) {
+    nav('/', { replace: true })
     return null
   }
 
   const { you, opponent } = state
   const resultText =
-    you.score >  opponent.score ? 'You Won!'  :
+    you.score >  opponent.score ? 'You Won!' :
     you.score <  opponent.score ? 'You Lost!' :
                                   "It's a Tie!"
 
   return (
-    <div className="app-container" style={{ textAlign: 'center', padding: '2rem' }}>
-      <h1 style={{ color: '#fff', marginBottom: '1rem' }}>Game Over</h1>
-
-      <p style={{ color: '#fff', fontSize: '1.25rem' }}>
-        <strong>You:</strong>     {Math.round(you.score)}
+    <div className="app-container" style={{ textAlign:'center', padding:24 }}>
+      <h1 style={{ color:'#fff', marginBottom:16 }}>Game Over</h1>
+      <p style={{ color:'#fff', fontSize:18 }}>
+        <strong>You:</strong>     {you.score.toFixed(0)}
       </p>
-      <p style={{ color: '#fff', fontSize: '1.25rem' }}>
-        <strong>Opponent:</strong> {Math.round(opponent.score)}
+      <p style={{ color:'#fff', fontSize:18 }}>
+        <strong>Opponent:</strong> {opponent.score.toFixed(0)}
       </p>
-
-      <h2 style={{ color: '#fff', margin: '1.5rem 0' }}>
-        {resultText}
-      </h2>
-
+      <h2 style={{ color:'#fff', margin:'24px 0' }}>{resultText}</h2>
       <button
-        onClick={() => nav('/home')}
+        onClick={()=>nav('/home')}
         style={{
-          marginTop: '2rem',
-          padding: '0.75rem 1.5rem',
-          background: '#28a745',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '0.5rem',
-          cursor: 'pointer'
+          padding:'0.75rem 1.5rem',
+          background:'#28a745',
+          color:'#fff',
+          border:'none',
+          borderRadius:8,
+          cursor:'pointer'
         }}
       >
         Back to Home
