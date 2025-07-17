@@ -54,11 +54,23 @@ export default function Play() {
 
   // 5) hint
   const handleUseHint = () => {
-    if (!flag || usedHints.length >= 3) return
-    const avail = flag.hints.filter(h => !usedHints.includes(h))
-    if (!avail.length) return
-    setUsedHints(u => [...u, avail[Math.floor(Math.random()*avail.length)]])
+    if (submitted || usedHints.length >= 3) return
+    socket.emit('use-hint', { sessionId, round })
   }
+
+  // 6) listen for the server’s hint response
+  useEffect(() => {
+    if (!socket) return
+    const onHint = ({ hint, error }) => {
+      if (error) {
+        alert(error)
+      } else {
+        setUsedHints(h => [...h, hint])
+      }
+    }
+    socket.on('hint-selected', onHint)
+    return () => { socket.off('hint-selected', onHint) }
+  }, [socket])
 
   // 6) submit
   const handleSubmit = () => {
@@ -117,7 +129,7 @@ export default function Play() {
 
       <button
         onClick={handleUseHint}
-        disabled={usedHints.length>=3||submitted}
+        disabled={usedHints.length >= 3 || submitted }
         style={{
           marginBottom:'1rem',
           padding:'0.5rem 1rem',
